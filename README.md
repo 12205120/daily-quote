@@ -1,4 +1,4 @@
-# Daily Quote App made for you.
+# Daily Quote App made for you by rameez.
 
 A simple application that displays a random inspirational quote each time you load the page.
 
