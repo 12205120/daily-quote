@@ -1,4 +1,4 @@
-# Daily Quote App
+# Daily Quote App made for you.
 
 A simple application that displays a random inspirational quote each time you load the page.
 
