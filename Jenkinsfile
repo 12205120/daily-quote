@@ -15,9 +15,9 @@ pipeline {
         stage('Free up Port 5000') {
             steps {
                 bat '''
-                FOR /F "tokens=5" %A IN ('netstat -aon ^| findstr :5000') DO (
+                FOR /F "tokens=5" %%%%A IN ('netstat -aon ^| findstr :5000') DO (
                     echo Killing process using port 5000
-                    taskkill /F /PID %A
+                    taskkill /F /PID %%%%A
                 )
                 '''
             }
