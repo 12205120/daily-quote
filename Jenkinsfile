@@ -1,61 +1,69 @@
 pipeline {
     agent any
-    
+
     environment {
-        // Define environment variables if needed
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from version control
                 checkout scm
             }
         }
-        
+
+        stage('Free up Port 5000') {
+            steps {
+                bat '''
+                FOR /F "tokens=5" %%A IN ('netstat -aon ^| findstr :5000') DO (
+                    echo Killing process using port 5000
+                    taskkill /F /PID %%A
+                )
+                '''
+            }
+        }
+
         stage('Stop Existing Containers') {
             steps {
                 script {
                     try {
-                        bat 'docker-compose down'
+                        bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} down"
                     } catch (Exception e) {
                         echo 'No containers were running'
                     }
                 }
             }
         }
-        
+
         stage('Build and Start Containers') {
             steps {
                 script {
-                    // Build and start containers using docker-compose
-                    bat 'docker-compose up --build -d'
+                    bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} up --build -d"
                 }
             }
         }
-        
+
         stage('Health Check') {
             steps {
                 script {
-                    // Wait for services to be ready
                     sleep(time: 30, unit: 'SECONDS')
-                    
-                    // Check if services are running
-                    bat 'docker-compose ps'
-                    
-                    // Test backend API endpoint
-                    bat 'curl -f http://localhost:5000/quote || exit 1'
+                    bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} ps"
+                    bat '''
+                    curl -f http://localhost:5000/quote || (
+                        echo Backend health check failed!
+                        exit /b 1
+                    )
+                    '''
                 }
             }
         }
     }
-    
+
     post {
         failure {
             script {
-                // Clean up containers if build fails
-                bat 'docker-compose down'
+                echo 'Build failed. Cleaning up containers...'
+                bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} down"
             }
         }
     }
