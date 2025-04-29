@@ -23,11 +23,25 @@ pipeline {
             }
         }
 
+        stage('Verify Docker is Running') {
+            steps {
+                bat '''
+                docker info > nul 2>&1
+                if %ERRORLEVEL% NEQ 0 (
+                    echo Docker is not running!
+                    exit /b 1
+                ) else (
+                    echo Docker is running.
+                )
+                '''
+            }
+        }
+
         stage('Stop Existing Containers') {
             steps {
                 script {
                     try {
-                        bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} down"
+                        bat "docker-compose -f %DOCKER_COMPOSE_FILE% down"
                     } catch (Exception e) {
                         echo 'No containers were running'
                     }
@@ -38,7 +52,7 @@ pipeline {
         stage('Build and Start Containers') {
             steps {
                 script {
-                    bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} up --build -d"
+                    bat "docker-compose -f %DOCKER_COMPOSE_FILE% up --build -d"
                 }
             }
         }
@@ -47,7 +61,7 @@ pipeline {
             steps {
                 script {
                     sleep(time: 30, unit: 'SECONDS')
-                    bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} ps"
+                    bat "docker-compose -f %DOCKER_COMPOSE_FILE% ps"
                     bat '''
                     curl -f http://localhost:5000/quote || (
                         echo Backend health check failed!
@@ -63,7 +77,7 @@ pipeline {
         failure {
             script {
                 echo 'Build failed. Cleaning up containers...'
-                bat "docker-compose -f ${env.DOCKER_COMPOSE_FILE} down"
+                bat "docker-compose -f %DOCKER_COMPOSE_FILE% down"
             }
         }
     }
