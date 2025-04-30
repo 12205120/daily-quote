@@ -31,7 +31,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Daily Quote-by rameez</h1>
+        <h1>Daily Quote-rameez</h1>
         <div className="quote-container">
           {loading ? (
             <p>Loading...</p>
